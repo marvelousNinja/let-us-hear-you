@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.3.5",
     "body-parser": "^1.15.1",
     "cloudant": "^1.4.1",
     "dotenv": "^2.0.0",

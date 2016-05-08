@@ -3,13 +3,14 @@ var path = require('path');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
 var dotenv = require('dotenv');
+var Promise = require('bluebird');
 var Cloudant = require('cloudant');
 
 dotenv.load();
 
 var connection = Cloudant(process.env.CLOUDANT_URL);
 connection.db.create('let_us_hear_you');
-var database = connection.db.use('let_us_hear_you');
+var database = Promise.promisifyAll(connection.db.use('let_us_hear_you'));
 
 var app = express();
 app.set('view options', { layout: false });
@@ -36,19 +37,24 @@ app.get('/', function(req, res) {
 });
 
 app.post('/feedback', function(req, res) {
-  database.insert({
+  database.insertAsync({
     type: 'feedback',
     timestamp: +new Date()
-  }, function(err) {
-    if (err) {
-      res.status(err.status || 500);
-      res.render('error', {
-        message: err.message,
-        error: err
-      });
-    } else {
-      res.redirect('/');
-    }
+  }).then(function(response) {
+    return database.insertAsync({
+      type: 'text_content',
+      content: req.body.content,
+      feedback_id: response.id,
+      timestamp: +new Date()
+    });
+  }).then(function() {
+    res.redirect('/');
+  }).catch(function(error) {
+    res.status(error.status || 500);
+    res.render('error', {
+      message: error.message,
+      error: error
+    });
   });
 });
 
