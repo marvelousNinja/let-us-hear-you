@@ -1,0 +1,24 @@
+doctype html
+html
+  head
+    link(rel='stylesheet', href='home.css')
+  body
+    .home
+      h1 Feedback Dashboard
+
+      table
+        tr
+          th Id
+          th Type
+          th Created At
+
+        - records.sort((a, b) => b.timestamp - a.timestamp).forEach((record) => {
+          tr
+            td= record._id
+            td= record.type
+            td= new Date(record.timestamp)
+        - })
+
+      form.feedback-form(action='/feedback', method='post')
+        textarea.feedback-form__content(name='content')
+        button.feedback-form__submit.button(type='submit') Import Feedback

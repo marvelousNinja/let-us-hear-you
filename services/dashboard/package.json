@@ -1,0 +1,25 @@
+{
+  "name": "dashboard",
+  "version": "1.0.0",
+  "description": "The purpose of this service is to visualize current state of feedback records. Also, it should be possible to add new feedback records using provided form.",
+  "main": "index.js",
+  "scripts": {
+    "watch": "nodemon",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "cloudant": "^1.4.1",
+    "dotenv": "^2.0.0",
+    "express": "^4.13.4",
+    "morgan": "^1.7.0",
+    "pug": "^2.0.0-alpha6"
+  },
+  "devDependencies": {
+    "nodemon": "^1.9.2"
+  }
+}

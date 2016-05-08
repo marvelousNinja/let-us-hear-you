@@ -1,0 +1,13 @@
+.home {
+  padding: 20px;
+}
+
+.feedback-form__content {
+  display: block;
+  margin: 20px 0;
+}
+
+.feedback-form__submit {
+  display: block;
+  margin: 20px 0;
+}
