@@ -20,10 +20,16 @@ function main(params) {
     if (error) {
       return whisk.done({ error: error });
     } else {
+      var tones = response.body.document_tone.tone_categories[0].tones;
+      var emotions = tones.reduce(function(result, tone_record) {
+        result[tone_record.tone_id] = tone_record;
+        return result;
+      }, {});
+
       Cloudant(params.cloudant_url).use(params.cloudant_db).insert({
         type: 'emotion_report',
         // TODO AS: Document those!
-        tones: response.body.document_tone.tone_categories[0].tones,
+        emotions: emotions,
         feedback_id: params.feedback_id,
         timestamp: +Date.now()
       }, function(error) {

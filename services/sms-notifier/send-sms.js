@@ -6,6 +6,10 @@ function main(params) {
     return;
   }
 
+  if (params.emotions.anger.score < 0.5 && params.emotions.distust.score < 0.5) {
+    return;
+  }
+
   request({
     url: params.twilio_url + '/Accounts/' + params.twilio_sid + '/Messages.json',
     method: 'POST',
