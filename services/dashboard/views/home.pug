@@ -19,6 +19,7 @@ html
             td= new Date(record.timestamp)
         - })
 
-      form.feedback-form(action='/feedback', method='post')
+      form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
         textarea.feedback-form__content(name='content')
+        input.feedback-form__audio(type='file', name='audio')
         button.feedback-form__submit.button(type='submit') Import Feedback
