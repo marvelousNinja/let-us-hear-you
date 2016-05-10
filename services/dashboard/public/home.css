@@ -1,5 +1,48 @@
-.home {
-  padding: 20px;
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500italic,500,700,700italic,900,900italic);
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  font-family: 'Roboto', sans-serif;
+}
+
+body {
+  background-color: #454D56;
+  color: #FFFFFF;
+}
+
+.feedback {
+  margin: 10px;
+  background-color: #FFCB04;
+  color: #444C55;
+  padding: 10px;
+  font-weight: 300;
+}
+
+.feedback__status {
+  margin-bottom: 10px;
+}
+
+.feedback__content {
+  margin-bottom: 10px;
+}
+
+.feedback__source {
+  margin-bottom: 10px;
+}
+
+.feedback__emo {
+  margin-right: 5px;
+}
+
+.title {
+  background-color: #FFFFFF;
+  color: #000000;
+  padding: 10px;
+  font-weight: 400;
 }
 
 .feedback-form__content {

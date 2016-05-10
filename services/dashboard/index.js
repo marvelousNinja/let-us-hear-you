@@ -6,6 +6,7 @@ var Promise = require('bluebird');
 var Cloudant = require('cloudant');
 var multer = require('multer');
 var streamifier = require('streamifier');
+var _ = require('underscore');
 
 var upload = multer();
 
@@ -70,8 +71,18 @@ app.get('/', function(req, res) {
         error: err
       });
     } else {
+      var resources = _.chain(response.rows)
+        .pluck('doc')
+        .filter(function(doc) { return doc.feedback_id; })
+        .groupBy('feedback_id')
+        .values()
+        .map(function(events) { return Object.assign.apply(null, _.sortBy(events, 'timestamp')); })
+        .sortBy('timestamp')
+        .reverse()
+        .value();
+
       res.render('home', {
-        records: response.rows.map(function(row) { return row.doc; })
+        resources: resources
       });
     }
   });
