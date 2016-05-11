@@ -1,0 +1,16 @@
+---
+declared-services:
+  analyst-cloudant:
+    label: cloudantNoSQLDB
+    plan: Shared
+  analyst-object-storage:
+    label: Object-Storage
+    plan: Free
+
+applications:
+- name: let-us-hear-you-dashboard
+  random-route: true
+  memory: 256M
+  services:
+  - analyst-cloudant
+  - analyst-object-storage
