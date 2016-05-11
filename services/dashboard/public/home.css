@@ -39,15 +39,20 @@ body {
 }
 
 .title {
-  background-color: #FFFFFF;
-  color: #000000;
+  #background-color: #FFFFFF;
+  color: #FFFFFF;
   padding: 10px;
   font-weight: 400;
+}
+
+.feedback-form {
+  padding: 10px;
 }
 
 .feedback-form__content {
   display: block;
   margin: 20px 0;
+  width: 100%;
 }
 
 .feedback-form__submit {

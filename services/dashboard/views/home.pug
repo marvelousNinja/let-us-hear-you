@@ -8,7 +8,7 @@ html
     - resources.forEach(function(feedback) {
       .feedback
         h2.feedback__heading= (feedback.content && feedback.content.substr(0, 35) + '...') || 'No text content'
-        .feedback__status <b>pending</b> since #{new Date(feedback.timestamp) }
+        .feedback__status <b>#{feedback.status}</b> since #{new Date(feedback.timestamp) }
         .feedback__content= feedback.content
         if feedback.path
           .feedback__source
@@ -22,6 +22,6 @@ html
     - })
 
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
-      textarea.feedback-form__content(name='content')
+      textarea.feedback-form__content(name='content', rows='10')
       input.feedback-form__audio(type='file', name='audio')
       button.feedback-form__submit.button(type='submit') Import Feedback

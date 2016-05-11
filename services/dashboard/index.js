@@ -78,6 +78,24 @@ app.get('/', function(req, res) {
         .values()
         .map(function(events) { return Object.assign.apply(null, _.sortBy(events, 'timestamp')); })
         .sortBy('timestamp')
+        .map(function(resource) {
+          switch (resource.type) {
+          case 'sms_notification':
+            resource.status = 'notified';
+            break;
+          case 'emotion_report':
+            resource.status = 'analyzed';
+            break;
+          case 'text_content':
+            resource.status = 'waiting for emotion analysis';
+            break;
+          case 'audio_content':
+            resource.status = 'waiting for text extraction';
+            break;
+          }
+
+          return resource;
+        })
         .reverse()
         .value();
 
