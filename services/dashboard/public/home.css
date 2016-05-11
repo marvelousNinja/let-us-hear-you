@@ -1,4 +1,6 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500italic,500,700,700italic,900,900italic);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,300italic,300,400italic,600,600italic,700,700italic,800,800italic);
+@import url(https://fonts.googleapis.com/css?family=Lato:400,100,100italic,300,300italic,400italic,700,700italic,900,900italic);
 
 * {
   padding: 0;
@@ -6,56 +8,66 @@
 }
 
 html {
-  font-family: 'Roboto', sans-serif;
+  /*font-family: 'Roboto', sans-serif;*/
+  /*font-family: 'Open Sans', sans-serif;*/
+  font-family: 'Lato', sans-serif;
+  line-height: 1.4rem;
+  font-size: 15px;
 }
 
 body {
-  background-color: #454D56;
-  color: #FFFFFF;
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.feedback {
-  margin: 10px;
-  background-color: #FFCB04;
-  color: #444C55;
-  padding: 10px;
+.accent {
+  color: blue;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.misc {
+  color: gray;
+  text-transform: uppercase;
+  font-weight: 300;
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+
+.thin {
   font-weight: 300;
 }
 
-.feedback__status {
-  margin-bottom: 10px;
+.bold {
+  font-weight: 600;
+  margin-left: 10px;
 }
 
-.feedback__content {
-  margin-bottom: 10px;
+.header {
+  font-size: 2.5rem;
+  display: flex;
+  flex-direction: row;
+  margin: 40px 0;
 }
 
-.feedback__source {
-  margin-bottom: 10px;
+.feedback {
+  margin-bottom: 45px;
+  margin-top: 15px;
 }
 
-.feedback__emo {
-  margin-right: 5px;
+.feedback__heading {
+  font-weight: 600;
+  font-size: 1.6rem;
+  border-top: 2px solid black;
+  padding-top: 15px;
+  margin: 0.5rem 0;
 }
 
-.title {
-  #background-color: #FFFFFF;
-  color: #FFFFFF;
-  padding: 10px;
-  font-weight: 400;
-}
-
-.feedback-form {
-  padding: 10px;
-}
-
-.feedback-form__content {
-  display: block;
-  margin: 20px 0;
-  width: 100%;
-}
-
-.feedback-form__submit {
-  display: block;
-  margin: 20px 0;
+.feedback__details {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  margin: 1rem 0;
 }

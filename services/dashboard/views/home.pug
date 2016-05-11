@@ -3,22 +3,17 @@ html
   head
     link(rel='stylesheet', href='home.css')
   body
-    h1.title Feedback Dashboard
+    .header
+      .thin Let Us
+      .bold Hear You
 
     - resources.forEach(function(feedback) {
       .feedback
-        h2.feedback__heading= (feedback.content && feedback.content.substr(0, 35) + '...') || 'No text content'
-        .feedback__status <b>#{feedback.status}</b> since #{new Date(feedback.timestamp) }
+        .feedback__heading= feedback.content.substr(0, 35) + '...'
+        .feedback__details
+          .accent= feedback.status
+          .misc= 'since ' + new Date(feedback.timestamp)
         .feedback__content= feedback.content
-        if feedback.path
-          .feedback__source
-            | <b>Source: </b><a href='#{feedback.path}'>#{feedback.path}</a>
-        .feedback__report
-          span.feedback__emo <b>Joy: </b>#{(feedback.emotions && Math.floor(feedback.emotions.joy.score * 100) + '%') || 'N/A'}
-          span.feedback__emo <b>Anger: </b>#{(feedback.emotions && Math.floor(feedback.emotions.anger.score * 100) + '%') || 'N/A'}
-          span.feedback__emo <b>Disgust: </b>#{(feedback.emotions && Math.floor(feedback.emotions.disgust.score * 100) + '%') || 'N/A'}
-          span.feedback__emo <b>Sadness: </b>#{(feedback.emotions && Math.floor(feedback.emotions.sadness.score * 100) + '%') || 'N/A'}
-          span.feedback__emo <b>Fear: </b>#{(feedback.emotions && Math.floor(feedback.emotions.fear.score * 100) + '%') || 'N/A'}
     - })
 
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
