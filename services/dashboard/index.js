@@ -7,6 +7,7 @@ var Cloudant = require('cloudant');
 var multer = require('multer');
 var streamifier = require('streamifier');
 var _ = require('underscore');
+var autoprefixer = require('express-autoprefixer');
 
 var upload = multer();
 
@@ -60,6 +61,7 @@ app.set('view options', { layout: false });
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(logger('dev'));
+app.use(autoprefixer({ browsers: 'last 2 versions', cascade: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res) {

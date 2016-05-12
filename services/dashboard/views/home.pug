@@ -5,18 +5,25 @@ html
   body
     .header
       .thin Let Us
-      .bold Hear You
+      .bold &nbsp;Hear You
 
     - resources.forEach(function(feedback) {
       .feedback
         .feedback__heading= feedback.content.substr(0, 35) + '...'
         .feedback__details
-          .accent= feedback.status
+          .accent #{feedback.status}&nbsp;
           .misc= 'since ' + new Date(feedback.timestamp)
+        .feedback__emotions
+          each emotion, name in feedback.emotions || {}
+            .accent(style='color: #FF349C') #{emotion.tone_name}&nbsp;
+            .accent(style='color: #FF349C; margin-right: 15px;') #{Math.floor(emotion.score * 100) + '%'}&nbsp;
         .feedback__content= feedback.content
     - })
 
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
-      textarea.feedback-form__content(name='content', rows='10')
-      input.feedback-form__audio(type='file', name='audio')
+      .feedback-form__title Import Feedback
+      textarea.feedback-form__content(name='content', rows='10', placeholder='Please, provide feedback text content here')
+      label.feedback-form__audio
+        input.feedback-form__file(type='file', name='audio')
+        | Or Provide Audio Record
       button.feedback-form__submit.button(type='submit') Import Feedback
