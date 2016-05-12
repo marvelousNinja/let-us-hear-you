@@ -9,7 +9,7 @@ html
 
     - resources.forEach(function(feedback) {
       .feedback
-        .feedback__heading= feedback.content.substr(0, 35) + '...'
+        .feedback__heading= feedback.content ? feedback.content.substr(0, 35) + '...' : 'Content not available...'
         .feedback__details
           .accent #{feedback.status}&nbsp;
           .misc= 'since ' + new Date(feedback.timestamp)
