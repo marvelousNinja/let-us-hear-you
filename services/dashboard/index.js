@@ -2,7 +2,8 @@ var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var dotenv = require('dotenv');
-var Promise = require('bluebird');
+var when = require('when');
+var nodefn = require('when/node');
 var Cloudant = require('cloudant');
 var multer = require('multer');
 var streamifier = require('streamifier');
@@ -15,8 +16,10 @@ dotenv.load();
 
 var connection = Cloudant(process.env.CLOUDANT_URL);
 connection.db.create('let_us_hear_you');
-var database = Promise.promisifyAll(connection.db.use('let_us_hear_you'));
+// TODO AS: Extract db name into config?
+var database = connection.db.use('let_us_hear_you');
 
+// TODO AS: Move closer to place of usage
 // https://developer.ibm.com/recipes/tutorials/using-the-ibm-object-storage-for-bluemix-with-node-js-applications/
 // https://github.com/pkgcloud/pkgcloud/pull/461/files
 // https://github.com/pkgcloud/pkgcloud/issues/477
@@ -65,15 +68,9 @@ app.use(autoprefixer({ browsers: 'last 2 versions', cascade: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function(req, res) {
-  database.list({ 'include_docs': true }, function(err, response) {
-    if (err) {
-      res.status(err.status || 500);
-      res.render('error', {
-        message: err.message,
-        error: err
-      });
-    } else {
-      var resources = _.chain(response.rows)
+  nodefn.call(database.list.bind(database), { include_docs: true }).
+    then(function(response) {
+      var resources = _.chain(response[0].rows)
         .pluck('doc')
         .filter(function(doc) { return doc.feedback_id; })
         .groupBy('feedback_id')
@@ -101,25 +98,28 @@ app.get('/', function(req, res) {
         .reverse()
         .value();
 
-      res.render('home', {
-        resources: resources
+      res.render('home', { resources: resources });
+    }).catch(function(error) {
+      res.status(error.status || 500);
+      res.render('error', {
+        message: error.message,
+        error: error
       });
-    }
-  });
+    });
 });
 
 app.post('/feedback', upload.single('audio'), function(req, res) {
-  database.insertAsync({
+  nodefn.call(database.insert.bind(database), {
     type: 'feedback',
     timestamp: +new Date()
   }).then(function(response) {
     if (req.file) {
-      var uploadPromise = new Promise(function(resolve, reject) {
+      return when.promise(function(resolve, reject) {
         var fileStream = streamifier.createReadStream(req.file.buffer);
 
         var writeStream = storageClient.upload({
           container: 'audio',
-          remote: response.id + '/' + req.file.originalname
+          remote: response[0].id + '/' + req.file.originalname
         });
 
         fileStream.pipe(writeStream);
@@ -129,26 +129,24 @@ app.post('/feedback', upload.single('audio'), function(req, res) {
         });
 
         writeStream.on('error', function(error) {
-          reject();
+          reject(error);
         });
-      });
-
-      return uploadPromise.then(function(audioPath) {
-        return database.insertAsync({
+      }).then(function(audioPath) {
+        return nodefn.call(database.insert.bind(database), {
           type: 'audio_content',
           path: audioPath,
-          feedback_id: response.id,
+          feedback_id: response[0].id,
           timestamp: +new Date()
         });
       });
+    } else {
+      return nodefn.call(database.insert.bind(database), {
+        type: 'text_content',
+        content: req.body.content,
+        feedback_id: response[0].id,
+        timestamp: +new Date()
+      });
     }
-
-    return database.insertAsync({
-      type: 'text_content',
-      content: req.body.content,
-      feedback_id: response.id,
-      timestamp: +new Date()
-    });
   }).then(function() {
     res.redirect('/');
   }).catch(function(error) {
@@ -174,4 +172,5 @@ app.use(function(err, req, res, next) {
   });
 });
 
+// TODO AS: Print correct port
 app.listen(process.env.PORT || 3000, function() { console.log('Example app listening on port 3000!'); });
