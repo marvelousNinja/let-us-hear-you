@@ -99,13 +99,7 @@ app.get('/', function(req, res) {
         .value();
 
       res.render('home', { resources: resources });
-    }).catch(function(error) {
-      res.status(error.status || 500);
-      res.render('error', {
-        message: error.message,
-        error: error
-      });
-    });
+    }).catch(function(err) { handleError(err, res) });
 });
 
 app.post('/feedback', upload.single('audio'), function(req, res) {
@@ -149,13 +143,7 @@ app.post('/feedback', upload.single('audio'), function(req, res) {
     }
   }).then(function() {
     res.redirect('/');
-  }).catch(function(error) {
-    res.status(error.status || 500);
-    res.render('error', {
-      message: error.message,
-      error: error
-    });
-  });
+  }).catch(function(err) { handleError(err, res) });
 });
 
 app.use(function(req, res, next) {
@@ -164,13 +152,15 @@ app.use(function(req, res, next) {
   next(err);
 });
 
-app.use(function(err, req, res, next) {
+app.use(function(err, req, res, next) { handleError(err, res) });
+
+function handleError(err, res) {
   res.status(err.status || 500);
   res.render('error', {
     message: err.message,
     error: err
   });
-});
+}
 
 // TODO AS: Print correct port
 app.listen(process.env.PORT || 3000, function() { console.log('Example app listening on port 3000!'); });
