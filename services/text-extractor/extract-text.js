@@ -12,7 +12,7 @@ function main(params) {
 }
 
 function extractText(params) {
-  if (params.type !== 'audio_content') {
+  if ((params.type !== 'event') || (params.name !== 'AudioUploaded')) {
     return;
   }
 
@@ -33,7 +33,7 @@ function recognizeSpeech(params) {
   });
 
   return nodefn.call(speechToText.recognize.bind(speechToText), {
-    audio: request(params.path),
+    audio: request(params.attributes.path),
     // TODO AS: Support more formats or document that limitation...
     content_type: 'audio/flac'
   });
@@ -43,11 +43,16 @@ function storeText(params, response) {
   // TODO AS: Somehow, response is an array
   var text = response[0].results[0].alternatives[0].transcript;
   var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
+
   return nodefn.call(database.insert.bind(database), {
-    type: 'text_content',
-    content: text,
-    feedback_id: params.feedback_id,
-    timestamp: +Date.now()
+    type: 'event',
+    name: 'TextAdded',
+    aggregate_type: 'feedback',
+    aggregate_id: params.aggregate_id,
+    timestamp: +new Date(),
+    attributes: {
+      text: text
+    }
   });
 }
 

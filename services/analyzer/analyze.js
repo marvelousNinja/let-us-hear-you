@@ -12,7 +12,7 @@ function main(params) {
 
 function analyze(params) {
   // TODO AS: Validations
-  if (params.type !== 'text_content') {
+  if ((params.type !== 'event') || (params.name !== 'TextAdded')) {
     return;
   }
 
@@ -30,7 +30,7 @@ function analyzeText(params) {
     url: params.tone_analyzer_url + '/v3/tone?version=2016-02-11&tones=emotion&sentences=false',
     method: 'POST',
     json: {
-      text: params.content
+      text: params.attributes.text
     },
     auth: {
       username: params.tone_analyzer_username,
@@ -41,6 +41,7 @@ function analyzeText(params) {
 
 function saveEmotionReport(params, response) {
   // TODO AS: Not sure why it returns array here
+  // TODO AS: Document those! It should be obvious how that data works
   var tones = response[0].body.document_tone.tone_categories[0].tones;
   var emotions = tones.reduce(function(result, tone_record) {
     result[tone_record.tone_id] = tone_record;
@@ -49,11 +50,14 @@ function saveEmotionReport(params, response) {
 
   var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
   return nodefn.call(database.insert.bind(database), {
-    type: 'emotion_report',
-    // TODO AS: Document those! It should be obvious how that data works
-    emotions: emotions,
-    feedback_id: params.feedback_id,
-    timestamp: +Date.now()
+    type: 'event',
+    name: 'EmotionsAnalysed',
+    aggregate_type: 'feedback',
+    aggregate_id: params.aggregate_id,
+    timestamp: +new Date(),
+    attributes: {
+      emotions: emotions
+    }
   });
 }
 

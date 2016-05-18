@@ -9,15 +9,15 @@ html
 
     - resources.forEach(function(feedback) {
       .feedback
-        .feedback__heading= feedback.content ? feedback.content.substr(0, 35) + '...' : 'Content not available...'
+        .feedback__heading= feedback.attributes.text ? feedback.attributes.text.substr(0, 35) + '...' : 'Content not available...'
         .feedback__details
-          .accent #{feedback.status}&nbsp;
-          .misc= 'since ' + new Date(feedback.timestamp)
+          .accent #{feedback.attributes.status}&nbsp;
+          .misc= 'since ' + new Date(feedback.last_event.timestamp)
         .feedback__emotions
-          each emotion, name in feedback.emotions || {}
+          each emotion, name in feedback.attributes.emotions || {}
             .accent(style='color: #FF349C') #{emotion.tone_name}&nbsp;
             .accent(style='color: #FF349C; margin-right: 15px;') #{Math.floor(emotion.score * 100) + '%'}&nbsp;
-        .feedback__content= feedback.content
+        .feedback__content= feedback.attributes.text
     - })
 
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')

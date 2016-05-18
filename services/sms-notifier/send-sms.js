@@ -12,11 +12,11 @@ function main(params) {
 
 function sendSms(params) {
   // TODO AS: Add some validations here
-  if (params.type !== 'emotion_report') {
+  if ((params.type !== 'event') || (params.name !== 'EmotionsAnalysed')) {
     return;
   }
 
-  if (params.emotions.anger.score < 0.5 && params.emotions.disgust.score < 0.5) {
+  if (params.attributes.emotions.anger.score < 0.5 && params.attributes.emotions.disgust.score < 0.5) {
     return;
   }
 
@@ -36,7 +36,7 @@ function sendTwilioSms(params) {
     form: {
       From: params.twilio_phone_number,
       To: params.manager_phone_number,
-      Body: 'Negative feedback detected: ' + params.feedback_id
+      Body: 'Negative feedback detected: ' + params.aggregate_id
     },
     auth: {
       username: params.twilio_sid,
@@ -49,9 +49,12 @@ function saveNotification(params) {
   var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
   return nodefn.call(database.insert.bind(database), {
-    type: 'sms_notification',
-    timestamp: +Date.now(),
-    feedback_id: params.feedback_id
+    type: 'event',
+    name: 'SmsNotificationSent',
+    aggregate_type: 'feedback',
+    aggregate_id: params.aggregate_id,
+    timestamp: +new Date(),
+    attributes: {}
   });
 }
 
