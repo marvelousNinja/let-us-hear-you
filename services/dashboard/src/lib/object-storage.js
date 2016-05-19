@@ -41,17 +41,17 @@ function upload(path, buffer) {
 
     fileStream.pipe(storageStream);
 
-    writeStream.on('success', function(data) {
+    storageStream.on('success', function(data) {
       resolve(storageClient._serviceUrl + '/' + data.container + '/' + data.name);
     });
 
-    writeStream.on('error', function(error) {
+    storageStream.on('error', function(error) {
       reject(error);
     });
   });
 }
 
-// Doesn't even if container exists
+// Doesn't fail if container exists
 function createContainer() {
   return nodefn.call(storageClient.createContainer.bind(storageClient), {
     name: 'audio',

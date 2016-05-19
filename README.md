@@ -506,17 +506,17 @@ Actual audio processing will be covered a bit later.
 
 	    fileStream.pipe(storageStream);
 
-	    writeStream.on('success', function(data) {
+	    storageStream.on('success', function(data) {
 	      resolve(storageClient._serviceUrl + '/' + data.container + '/' + data.name);
 	    });
 
-	    writeStream.on('error', function(error) {
+	    storageStream.on('error', function(error) {
 	      reject(error);
 	    });
 	  });
 	}
 
-	// Doesn't even if container exists
+	// Doesn't fail if container exists
 	function createContainer() {
 	  return nodefn.call(storageClient.createContainer.bind(storageClient), {
 	    name: 'audio',
@@ -538,7 +538,7 @@ Actual audio processing will be covered a bit later.
 
 	In order to simplify processing of the files later, we make our `audio` container public (by specifying `X-Container-Read`). That way, all our services will be able to download files without any special libraries or credentials.
 
-	The hardest part is the `upload()`. First, it setups two Node.js Streams: [https://nodejs.org/api/stream.html#stream_stream](https://nodejs.org/api/stream.html#stream_stream). Streams are abstractions to transfer data in chunks. Second, it directs the data from `fileStream` to `writeStream`. Third, it uses When.js library to convert event-based API into promise-based. As a result, `upload()` returns Promise, which, when resolved, provides a path to uploaded file.
+	The hardest part is the `upload()`. First, it setups two Node.js Streams: [https://nodejs.org/api/stream.html#stream_stream](https://nodejs.org/api/stream.html#stream_stream). Streams are abstractions to transfer data in chunks. Second, it directs the data from `fileStream` to `storageStream`. Third, it uses When.js library to convert event-based API into promise-based. As a result, `upload()` returns Promise, which, when resolved, provides a path to uploaded file.
 
 1. Let's refresh a browser window and check if all works correctly. You can try to upload one of the following files using the form:
   * TBD
