@@ -9,7 +9,7 @@ In this labwork we will create a customer feedback application using Node.js and
  * Watson Tone Analyzer
  * Object Storage
 
-The app will be split into microservices what can be developed, deployed and scaled independently. All services will use JavaScript as their primary programming language.
+The app will be split into microservices that can be developed, deployed and scaled independently. All services will use JavaScript as their primary programming language.
 
 Application will provide a way to import customer feedback messages as well as audio recordings. Internal services are going to analyse the text and provide emotion scores. In case of extremely negative feedback, customer relations manager will receive an SMS notification.
 
@@ -134,7 +134,7 @@ Before we proceed with actual development, we need to get starting version of th
 	git checkout starting-point
 	```
 
-1. Finally, let's lauch our app. We can start `dashboard` locally for now. However, OpenWhisk actions need to be deployed after that.
+1. We can start `dashboard` locally for now. However, other microservies need to be deployed anyway.
 
 	```bash
 	cd services/dashboard
@@ -145,16 +145,15 @@ Before we proceed with actual development, we need to get starting version of th
 	./services/change-listener/deploy.sh
 	./services/analyzer/deploy.sh
 	```
+	By default `dashboard` starts at 3000 port. It will restart itself every time you modify `*.js` files.
 
-1. Finally, let's deploy the app (order is important here):
+1. `dashboard` itself can be deployed too.
 
 	```bash
 	./services/dashboard/deploy.sh
-	./services/change-listener/deploy.sh
-	./services/analyzer/deploy.sh
 	```
 
-	Go ahead and try to import some feedback text via dashboard URL (deployment script should provide you with one). If the process was successful, you should see emotion score numbers after a couple of refreshes:
+	Go ahead and try to import some feedback text via `dashboard` (either on `http://localhost:3000` or Bluemix URL printed by deploy script). If the process was successful, you should see emotion score numbers after a couple of refreshes:
 
 	![Application Homepage]
 	(./images/introduction_homepage.png)
@@ -169,7 +168,7 @@ TBD
 	```
 
 ## Understanding the Architecture
-Starting app has three primary services: `dashboard`, `change-listener` and `analyzer`. Here's the how feedback records are processed:
+Starting app has three primary services: `dashboard`, `change-listener` and `analyzer`. Let us explain how they work:
 
 * Once user submits feedback form, `dashboard` inserts a document in Cloudant. Document looks like this:
 
@@ -185,19 +184,40 @@ Starting app has three primary services: `dashboard`, `change-listener` and `ana
 	  }
 	}
 	```
-	Every time we open the `dashboard`, it reconstructs feedback records using events. Basically, it merges events from the oldest to the most recent one. Resulting record might look like this:
+	We do not store feedback records, but instead we store a sequence of events. That sequence can be replayed to construct feedback records.
+
+	Every time we open the `dashboard`, it groups events by `aggregate_id` and replays them from the oldest to the most recent one. For example, if we add another event into the mix:
+	
+	```javascript
+	// This event comes significantly later than
+	// previous 'TextAdded'
+	{
+	  type: 'event',
+	  name: 'EmotionsAnalysed',
+	  aggregate_type: 'feedback',
+	  aggregate_id: '14141-12312312-412412414-123123',
+	  timestamp: 1463629159451,
+	  attributes: {
+	    emotions: { joy: '...', /*...*/ }
+	  }
+	}
+	```
+	and replay them both, we will result in the following feedback record:
 
 	```javascript
 	{
 	  id: '14141-12312312-412412414-123123',
 	  type: 'feedback',
 	  timestamp: 1463629152101, // creation time
-	  last_event: { /*...*/ },
+	  last_event: { name: 'EmotionsAnalysed', /*...*/ },
 	  attributes: {
-	    text: 'Sample Text'
+	    text: 'Sample Text',
+	    emotions: { joy: '...', /*...*/ }
 	  }
 	}
 	```
+	Let's point out again, that feedback records themselves are never stored (they can be cached, by each new event should invalidate that cache). They're constucted on every request.
+	
 	Provided code is a naive implementation of Event Sourcing: [http://martinfowler.com/eaaDev/EventSourcing.html](http://martinfowler.com/eaaDev/EventSourcing.html).
 
 * `change-listener` setups OpenWhisk trigger and feed [https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_triggers_rules.html](https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_triggers_rules.html). Basically, it calls attached OpenWhisk actions every time Cloudant database is updated. In our case - every time we insert an event into database.
@@ -516,14 +536,14 @@ Actual audio processing will be covered a bit later.
 
 	In order to simplify processing of the files later, we make our `audio` container public (by specifying `X-Container-Read`). That way, all our services will be able to download files without any special libraries or credentials.
 
-	The hardest part is the `upload()`. First, it setups two Node.js Streams (link to the docs). Streams are abstractions to transfer data in chunks. Second, it directs the data from `fileStream` to `writeStream`. Third, it uses When.js library to convert event-based API into promise-based. As a result, `upload()` returns Promise, which, when resolved, provides a path to uploaded file.
+	The hardest part is the `upload()`. First, it setups two Node.js Streams: [https://nodejs.org/api/stream.html#stream_stream](https://nodejs.org/api/stream.html#stream_stream). Streams are abstractions to transfer data in chunks. Second, it directs the data from `fileStream` to `writeStream`. Third, it uses When.js library to convert event-based API into promise-based. As a result, `upload()` returns Promise, which, when resolved, provides a path to uploaded file.
 
 1. Let's refresh a browser window and check if all works correctly. You can try to upload one of the following files using the form:
   * TBD
   * TBD
   * TBD
 
-  After import, the record should display *waiting for text extraction* state:
+  After import, the record should display **waiting for text extraction** state:
 
   ![Waiting for text extraction]
   (./uploading-files_extraction.png)
@@ -580,7 +600,7 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 
 1. Now we can actually implement OpenWhisk action at `extract-text.js`:
 
-	```
+	```javascript
 	var watson = require('watson-developer-cloud');
 	var request = require('request');
 	var nodefn = require('when/node');
