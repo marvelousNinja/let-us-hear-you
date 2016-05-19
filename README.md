@@ -30,6 +30,7 @@ Here's a list of software and external service accounts you would need to comple
 
 ## Getting started
 Before we proceed with actual development, we need to get starting version of the app and get familiar with the code.
+Also note that since OpenWhisk is available at US South region only, we will need to deploy our app in that region.
 
 1. Open the terminal and navigate to the projects folder of your choice
 1. Clone the repo:
@@ -104,7 +105,8 @@ Before we proceed with actual development, we need to get starting version of th
 1. Login to Bluemix API using Cloud Foundry CLI:
 
 	```bash
-	cf login -a https://api.eu-gb.bluemix.net
+	# Make sure you logged in US South region
+	cf login -a https://api.ng.bluemix.net
 	```
 
 1. Create required Bluemix services with the following command:
