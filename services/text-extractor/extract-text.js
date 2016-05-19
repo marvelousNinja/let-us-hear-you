@@ -3,21 +3,9 @@ var request = require('request');
 var nodefn = require('when/node');
 var Cloudant = require('cloudant');
 
-function main(params) {
-  try {
-    return extractText(params);
-  } catch (error) {
-    handleError(params, error);
-  }
-}
-
-function extractText(params) {
-  if ((params.type !== 'event') || (params.name !== 'AudioUploaded')) {
-    return;
-  }
-
+function processEvent(params) {
   recognizeSpeech(params)
-    .then(storeText.bind(null, params))
+    .then(insertEvent.bind(null, params))
     .then(reportSuccess)
     .catch(handleError.bind(null, params))
 
@@ -39,8 +27,7 @@ function recognizeSpeech(params) {
   });
 }
 
-function storeText(params, response) {
-  // TODO AS: Somehow, response is an array
+function insertEvent(params, response) {
   var text = response[0].results[0].alternatives[0].transcript;
   var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
@@ -54,6 +41,21 @@ function storeText(params, response) {
       text: text
     }
   });
+}
+
+function ignoreEvent(params) {
+  var notAnEvent = params.type !== 'event';
+  var notAudioUploaded = params.name !== 'AudioUploaded';
+
+  return notAnEvent || notAudioUploaded;
+}
+
+function main(params) {
+  try {
+    return ignoreEvent(params) ? null : processEvent(params);
+  } catch (error) {
+    handleError(params, error);
+  }
 }
 
 function reportSuccess() {

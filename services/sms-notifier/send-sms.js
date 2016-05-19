@@ -2,34 +2,23 @@ var request = require('request');
 var nodefn = require('when/node');
 var Cloudant = require('cloudant');
 
-function main(params) {
-  try {
-    return sendSms(params);
-  } catch (error) {
-    handleError(params, error);
-  }
-}
+function processEvent(params) {
+  var lowAngerChance = params.attributes.emotions.anger.score < 0.5;
+  var lowDisgustChance = params.attributes.emotions.disgust.score < 0.5;
 
-function sendSms(params) {
-  // TODO AS: Add some validations here
-  if ((params.type !== 'event') || (params.name !== 'EmotionsAnalysed')) {
+  if (lowAngerChance && lowDisgustChance) {
     return;
   }
 
-  if (params.attributes.emotions.anger.score < 0.5 && params.attributes.emotions.disgust.score < 0.5) {
-    return;
-  }
-
-  sendTwilioSms(params).
-    then(saveNotification.bind(null, params)).
+  sendSms(params).
+    then(insertEvent.bind(null, params)).
     then(reportSuccess).
     catch(handleError.bind(null, params))
 
   return whisk.async();
 }
 
-// TODO AS: Naming things is always a problem, meh?
-function sendTwilioSms(params) {
+function sendSms(params) {
   return nodefn.call(request, {
     url: params.twilio_url + '/Accounts/' + params.twilio_sid + '/Messages.json',
     method: 'POST',
@@ -45,7 +34,7 @@ function sendTwilioSms(params) {
   });
 }
 
-function saveNotification(params) {
+function insertEvent(params) {
   var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
   return nodefn.call(database.insert.bind(database), {
@@ -56,6 +45,21 @@ function saveNotification(params) {
     timestamp: +new Date(),
     attributes: {}
   });
+}
+
+function ignoreEvent(params) {
+  var notAnEvent = params.type !== 'event';
+  var notEmotionAnalysed = params.name !== 'EmotionsAnalysed';
+
+  return notAnEvent || notEmotionAnalysed;
+}
+
+function main(params) {
+  try {
+    return ignoreEvent(params) ? null : processEvent(params);
+  } catch (error) {
+    handleError(params, error);
+  }
 }
 
 function reportSuccess() {

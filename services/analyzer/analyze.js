@@ -2,25 +2,11 @@ var request = require('request');
 var nodefn = require('when/node');
 var Cloudant = require('cloudant');
 
-function main(params) {
-  try {
-    return analyze(params);
-  } catch (error) {
-    handleError(params, error);
-  }
-}
-
-function analyze(params) {
-  // TODO AS: Validations
-  if ((params.type !== 'event') || (params.name !== 'TextAdded')) {
-    return;
-  }
-
-  // TODO AS: Anything better than bind?
-  analyzeText(params).
-    then(saveEmotionReport.bind(null, params)).
-    then(reportSuccess).
-    catch(handleError.bind(null, params))
+function processEvent(params) {
+  analyzeText(params)
+    .then(insertEvent.bind(null, params))
+    .then(reportSuccess)
+    .catch(handleError.bind(null, params))
 
   return whisk.async();
 }
@@ -39,9 +25,7 @@ function analyzeText(params) {
   });
 }
 
-function saveEmotionReport(params, response) {
-  // TODO AS: Not sure why it returns array here
-  // TODO AS: Document those! It should be obvious how that data works
+function insertEvent(params, response) {
   var tones = response[0].body.document_tone.tone_categories[0].tones;
   var emotions = tones.reduce(function(result, tone_record) {
     result[tone_record.tone_id] = tone_record;
@@ -59,6 +43,22 @@ function saveEmotionReport(params, response) {
       emotions: emotions
     }
   });
+}
+
+function ignoreEvent(params) {
+  var notAnEvent = params.type !== 'event';
+  var notTextAdded = params.name !== 'TextAdded';
+
+  return notAnEvent || notTextAdded;
+}
+
+function main(params) {
+  try {
+    return ignoreEvent(params) ? null : processEvent(params);
+  } catch (error) {
+    console.log(error);
+    handleError(params, error);
+  }
 }
 
 function reportSuccess() {

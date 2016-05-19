@@ -23,17 +23,23 @@ function setClient() {
   storageClient.CONTAINER_META_PREFIX = '';
 }
 
-// TODO AS: Better names for streams
+function prepareFileStream(buffer) {
+  return streamifier.createReadStream(buffer);
+}
+
+function prepareStorageStream(path) {
+  return storageClient.upload({
+    container: 'audio',
+    remote: path
+  });
+}
+
 function upload(path, buffer) {
   return when.promise(function(resolve, reject) {
-    var fileStream = streamifier.createReadStream(buffer);
+    var storageStream = prepareStorageStream(path);
+    var fileStream = prepareFileStream(buffer);
 
-    var writeStream = storageClient.upload({
-      container: 'audio',
-      remote: path
-    });
-
-    fileStream.pipe(writeStream);
+    fileStream.pipe(storageStream);
 
     writeStream.on('success', function(data) {
       resolve(storageClient._serviceUrl + '/' + data.container + '/' + data.name);
@@ -45,14 +51,17 @@ function upload(path, buffer) {
   });
 }
 
-function init() {
-  setClient();
-
-  // TODO AS: Extract this
+// Doesn't even if container exists
+function createContainer() {
   return nodefn.call(storageClient.createContainer.bind(storageClient), {
     name: 'audio',
     metadata: { 'X-Container-Read': '.r:*' }
   });
+}
+
+function init() {
+  setClient();
+  return createContainer();
 }
 
 module.exports = {

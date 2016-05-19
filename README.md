@@ -1,7 +1,7 @@
 # Let Us Hear You
 
 ## Introduction
-In this exercise we will create a customer feedback processing application using Node.js and several IBM Bluemix services:
+In this labwork we will create a customer feedback application using Node.js and several IBM Bluemix services:
 
  * OpenWhisk
  * Cloudant
@@ -9,28 +9,205 @@ In this exercise we will create a customer feedback processing application using
  * Watson Tone Analyzer
  * Object Storage
 
-The functional parts will be split into microservices what can be developed, deployed and scaled independently. All services will use JavaScript as their primary programming language.
+The app will be split into microservices what can be developed, deployed and scaled independently. All services will use JavaScript as their primary programming language.
 
-Application will provide a way to import customer feedback messages as well as audio recordings. Internal services are going to analyse the text and provide emotion scores. As a result, customer Relations manager will receive an SMS notification in cases of extremely negative feedback.
+Application will provide a way to import customer feedback messages as well as audio recordings. Internal services are going to analyse the text and provide emotion scores. In case of extremely negative feedback, customer relations manager will receive an SMS notification.
 
-```
-Image for application here
-```
+![Application Homepage]
+(./images/introduction_homepage.png)
 
 ## Prerequisites
-Here's a list of software and external service accounts you would need to complete this lab:
+Here's a list of software and external service accounts you would need to complete this labwork:
 
-  * IBM Bluemix account https://bluemix.net
-  * Cloud Foundry CLI https://github.com/cloudfoundry/cli/releases
-  * OpenWhisk (closed beta) access https://bluemix.net/openwhisk
-  * OpenWhisk CLI https://bluemix.net/openwhisk/cli
-  * Twilio account https://www.twilio.com/try-twilio
+  * IBM Bluemix account: [https://bluemix.net](https://bluemix.net)
+  * Cloud Foundry CLI: [https://github.com/cloudfoundry/cli/releases](https://github.com/cloudfoundry/cli/releases)
+  * OpenWhisk (closed beta) access: [https://bluemix.net/openwhisk](https://bluemix.net/openwhisk)
+  * OpenWhisk CLI: [https://bluemix.net/openwhisk/cli](https://bluemix.net/openwhisk/cli)
+  * Twilio account: [https://www.twilio.com/try-twilio](https://www.twilio.com/try-twilio)
   * Linux/Mac OS
   * Node.js 4.4.x
   * Git
 
+## Getting started
+Before we proceed with actual development, we need to get starting version of the app and get familiar with the code.
+
+1. Open the terminal and navigate to the projects folder of your choice
+1. Clone the repo:
+
+	```bash
+	git clone https://github.com/marvelousNinja/let-us-hear-you.git
+	```
+
+	The repo contains two branches:
+	* master (completed labwork)
+	* starting-point (boilerplate to start with)
+
+1. Inspect the directory structure of the completed app:
+
+	```bash
+	let-us-hear-you
+	├── README.md
+	├── create-external-services.sh
+	├── print-external-credentials.sh
+	└── services
+	    ├── .gitignore
+	    ├── analyzer
+	    │   ├── README.md
+	    │   ├── analyze.js
+	    │   ├── deploy.sh
+	    │   └── remove.sh
+	    ├── change-listener
+	    │   ├── README.md
+	    │   ├── deploy.sh
+	    │   └── remove.sh
+	    ├── config.env.sample
+	    ├── dashboard
+	    │   ├── .cfignore
+	    │   ├── .env.sample
+	    │   ├── .gitignore
+	    │   ├── .nvmrc
+	    │   ├── README.md
+	    │   ├── deploy.sh
+	    │   ├── manifest.yml
+	    │   ├── package.json
+	    │   ├── remove.sh
+	    │   └── src
+	    │       ├── index.js
+	    │       ├── lib
+	    │       │   ├── database.js
+	    │       │   ├── display-helper.js
+	    │       │   ├── feedback-repository.js
+	    │       │   ├── import-feedback.js
+	    │       │   ├── object-storage.js
+	    │       │   └── upload-feedback.js
+	    │       ├── public
+	    │       │   └── home.css
+	    │       └── views
+	    │           ├── error.pug
+	    │           └── home.pug
+	    ├── sms-notifier
+	    │   ├── README.md
+	    │   ├── deploy.sh
+	    │   ├── remove.sh
+	    │   └── send-sms.js
+	    └── text-extractor
+	        ├── README.md
+	        ├── deploy.sh
+	        ├── extract-text.js
+	        └── remove.sh
+    ```
+
+	Note that each service has its own directory under `services` which contains the source code and utility tools (for example, deployment scripts)
+
+1. Make sure you've installed and configured OpenWhisk CLI: [https://bluemix.net/openwhisk/cli](https://bluemix.net/openwhisk/cli)
+
+1. Login to Bluemix API using Cloud Foundry CLI:
+
+	```bash
+	cf login -a https://api.eu-gb.bluemix.net
+	```
+
+1. Create required Bluemix services with the following command:
+
+	```bash
+	./create-external-services.sh
+	```
+
+1. Create configuration files. `*.sample` files contain fake credentials:
+
+	```bash
+	cp services/dashboard/.env.sample services/dashboard/.env
+	cp services/config.env.sample config.env
+	```
+
+1. Using credentials of created services, fill out created config files. You can get credentials for Bluemix services with:
+
+	```bash
+	./print-external-credentials.sh
+	```
+
+	Twilio credentials need to be obtained from Twilio dashboard: [https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1](https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1)
+
+1. Let's checkout to `starting-point` branch and proceed from there:
+
+	```bash
+	git checkout starting-point
+	```
+
+1. Finally, let's lauch our app. We can start `dashboard` locally for now. However, OpenWhisk actions need to be deployed after that.
+
+	```bash
+	cd services/dashboard
+	npm install
+	npm run watch
+
+	# and in different window
+	./services/change-listener/deploy.sh
+	./services/analyzer/deploy.sh
+	```
+
+1. Finally, let's deploy the app (order is important here):
+
+	```bash
+	./services/dashboard/deploy.sh
+	./services/change-listener/deploy.sh
+	./services/analyzer/deploy.sh
+	```
+
+	Go ahead and try to import some feedback text via dashboard URL (deployment script should provide you with one). If the process was successful, you should see emotion score numbers after a couple of refreshes:
+
+	![Application Homepage]
+	(./images/introduction_homepage.png)
+
+### Troubleshooting
+TBD
+
+* In order to see invocations of OpenWhisk actions, you can use either OpenWhisk Dashboard, or (with OpenWhisk CLI):
+
+	```bash
+	wsk activation poll
+	```
+
+## Understanding the Architecture
+Starting app has three primary services: `dashboard`, `change-listener` and `analyzer`. Here's the how feedback records are processed:
+
+* Once user submits feedback form, `dashboard` inserts a document in Cloudant. Document looks like this:
+
+	```javascript
+	{
+	  type: 'event',
+	  name: 'TextAdded',
+	  aggregate_type: 'feedback',
+	  aggregate_id: '14141-12312312-412412414-123123',
+	  timestamp: 1463629152101,
+	  attributes: {
+	    text: 'Sample Text'
+	  }
+	}
+	```
+	Every time we open the `dashboard`, it reconstructs feedback records using events. Basically, it merges events from the oldest to the most recent one. Resulting record might look like this:
+
+	```javascript
+	{
+	  id: '14141-12312312-412412414-123123',
+	  type: 'feedback',
+	  timestamp: 1463629152101, // creation time
+	  last_event: { /*...*/ },
+	  attributes: {
+	    text: 'Sample Text'
+	  }
+	}
+	```
+	Provided code is a naive implementation of Event Sourcing: [http://martinfowler.com/eaaDev/EventSourcing.html](http://martinfowler.com/eaaDev/EventSourcing.html).
+
+* `change-listener` setups OpenWhisk trigger and feed [https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_triggers_rules.html](https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_triggers_rules.html). Basically, it calls attached OpenWhisk actions every time Cloudant database is updated. In our case - every time we insert an event into database.
+
+* `analyzer` is an OpenWhisk action which is subscribed to `change-listener` feed. So, every time we insert an event, `analyze` is evaluated. That action generates another event: `EmotionsAnalysed`.
+
+**IMPORTANT**. `change-listener` launches all associated actions on *every* update. For example, `analyzer` indirectly invokes itself again when it inserts `EmotionsAnalysed`. Because of this, all listening services have guard clauses to ignore events that they shouldn't process. This is temporary limitation of OpenWhisk and Cloudant integration which is going to be lifted: [https://github.com/openwhisk/openwhisk/issues/272](https://github.com/openwhisk/openwhisk/issues/272)
+
 ## Sending Notifications
-Our application indeed analyses text, but there's no way to get information about negative feedback without constantly reading the website.
+Our application indeed analyses text, but there's no way to get information about negative feedback without constantly refreshing the website.
 
 The purpose of this step is to implement `sms-notifier` service. Here's a high-level description of what it should do:
 
@@ -41,7 +218,7 @@ The purpose of this step is to implement `sms-notifier` service. Here's a high-l
 
 Let us implement `sms-notifier` service as an OpenWhisk action. That way we can reuse our experience with `analyzer` service.
 
-1. Create a new service folder `sms-notifier`.
+1. Create a new service folder `sms-notifier`
 1. Add a `deploy.sh` script with the following contents:
 
 	```bash
@@ -64,7 +241,7 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 
 1. Create a `remove.sh` script with the following code:
 
-	```
+	```bash
 	#!/bin/bash
 
 	wsk rule delete --disable sendSmsOnChange
@@ -73,45 +250,34 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 
 1. Set executable flag on both scripts:
 
-	```
+	```bash
 	chmod +x deploy.sh remove.sh
 	```
 
-1. Now, let's implement OpenWhisk action itself. Create `send-sms.js` file:
+1. Let's implement OpenWhisk action itself. However, before doing this, it might be useful to experiment with Twilio Api Explorer: [https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1](https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1). After that, create `send-sms.js` file:
 
-	```
+	```bash
 	var request = require('request');
 	var nodefn = require('when/node');
 	var Cloudant = require('cloudant');
 
-	function main(params) {
-	  try {
-	    return sendSms(params);
-	  } catch (error) {
-	    handleError(params, error);
-	  }
-	}
+	function processEvent(params) {
+	  var lowAngerChance = params.attributes.emotions.anger.score < 0.5;
+	  var lowDisgustChance = params.attributes.emotions.disgust.score < 0.5;
 
-	function sendSms(params) {
-	  // TODO AS: Add some validations here
-	  if ((params.type !== 'event') || (params.name !== 'EmotionsAnalysed')) {
+	  if (lowAngerChance && lowDisgustChance) {
 	    return;
 	  }
 
-	  if (params.attributes.emotions.anger.score < 0.5 && params.attributes.emotions.disgust.score < 0.5) {
-	    return;
-	  }
-
-	  sendTwilioSms(params).
-	    then(saveNotification.bind(null, params)).
+	  sendSms(params).
+	    then(insertEvent.bind(null, params)).
 	    then(reportSuccess).
 	    catch(handleError.bind(null, params))
 
 	  return whisk.async();
 	}
 
-	// TODO AS: Naming things is always a problem, meh?
-	function sendTwilioSms(params) {
+	function sendSms(params) {
 	  return nodefn.call(request, {
 	    url: params.twilio_url + '/Accounts/' + params.twilio_sid + '/Messages.json',
 	    method: 'POST',
@@ -127,7 +293,7 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 	  });
 	}
 
-	function saveNotification(params) {
+	function insertEvent(params) {
 	  var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
 	  return nodefn.call(database.insert.bind(database), {
@@ -140,20 +306,24 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 	  });
 	}
 
-	function reportSuccess() {
-	  whisk.done();
+	function ignoreEvent(params) {
+	  var notAnEvent = params.type !== 'event';
+	  var notEmotionAnalysed = params.name !== 'EmotionsAnalysed';
+
+	  return notAnEvent || notEmotionAnalysed;
 	}
 
-	function handleError(params, error) {
-	  console.log(params);
-	  console.log(error);
-	  console.log(error.stack);
-	  whisk.done({ error: error });
-	}
+	// Can be copied from `analyze` action
+	function main() { /*...*/ }
+	function reportSuccess() { /*...*/ }
+	function handleError() { /*...*/ }
+
 	```
-	We follow the structure of `analyzer` service: `reportSuccess()`, `handleError()` and `main()` functions are almost the same. The only unique parts are `sendSms()` and `saveNotification()` functions.
+	We follow the structure of `analyzer` service.
 
-1. Deploy action to OpenWhisk:
+1. Note how we convert callback based API into Promise using When.js. Docs can be found here: [https://github.com/cujojs/when/blob/master/docs/api.md#nodecall](https://github.com/cujojs/when/blob/master/docs/api.md#nodecall). That method is being used quite often around the codebase.
+
+1. Deploy the action to OpenWhisk:
 
 	```bash
 	./deploy.sh
@@ -161,17 +331,16 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 
 1. Now, refresh the browser and input import some angry feedback. Here're some examples:
 
-  * Sample link
-  * Sample link
-  * Sample link
+  * TBD
+  * TBD
+  * TBD
 
-1. You should see **notified** status if anger probability is above 50%:
+1. You should see **manager has been notified** status if anger probability is above 50%:
 
-  ```
-  Image with notified state
-  ```
+	![Manager Notification]
+	(./images/sending-notifications_manager.png)
 
-  Text messages are usually arrive with a slight delay. However, make sure you've setup phone number correctly.
+  Phone notifications usually arrive with a slight delay. However, make sure you've setup phone number correctly.
 
 ###Troubleshooting
 TBD
@@ -179,13 +348,20 @@ TBD
 ## Uploading files
 So far, our application analyses emotions from feedback text and sends notifications. However, we can improve it even further by adding support for audio file processing.
 
-We will implement file uploads into Object Storage(link to the service here). Next step will cover actual audio processing.
+We will implement file uploads into Object Storage: [https://console.ng.bluemix.net/catalog/services/object-storage](https://console.ng.bluemix.net/catalog/services/object-storage). If you're interested in underlying technology, you can consult OpenStack SWIFT documentation: [http://docs.openstack.org/developer/swift/api/object_api_v1_overview.html](http://docs.openstack.org/developer/swift/api/object_api_v1_overview.html)
+
+Actual audio processing will be covered a bit later.
 
 1. Open terminal window and move to the Dashboard service directory
-1. Install additional NPM packages: ```npm install --save streamifier pkgcloud multer```
+1. Install additional NPM packages:
+
+	```bash
+	npm install --save streamifier pkgcloud multer
+	```
+
 1. Let's start with the upload form. Modify `src/views/home.pug` as follows:
 
-  ```pug
+	```pug
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
       .feedback-form__title Import Feedback
         textarea.feedback-form__content(name='content', rows='10', placeholder='Please, provide feedback text content here')
@@ -194,18 +370,15 @@ We will implement file uploads into Object Storage(link to the service here). Ne
           | Or Provide Audio Record
         button.feedback-form__submit.button(type='submit') Import Feedback
 	```
+
 	Refresh the page and verify that upload button appeared:
 
-	```
-	TODO AS: Uploaded image here
-	```
+	![Upload Form]
+	(./images/uploading-files_form.png)
 
 1. Let's wire up some logic with our form. Modify feedback import handler and add `init()` hook in `src/index.js` like this:
 
 	```javascript
-		```javascript
-	// src/index.js
-
 	var upload = multer();
 	var importFeedback = require('./lib/import-feedback');
 	var uploadFeedback = require('./lib/upload-feedback');
@@ -224,10 +397,9 @@ We will implement file uploads into Object Storage(link to the service here). Ne
 	database.init()
 	  .then(objectStorage.init)
 	  .then(function() {
-	    // TODO AS: Print correct port
-	    app.listen(process.env.PORT || 3000, function() { console.log('Example app listening on port 3000!');
-	  })
-	});
+	    var port = process.env.PORT || 3000;
+    	app.listen(port, function() { console.log('Listening on port', port); });
+	  });
 	```
 
 	We check if there's a file in the form and upload it. Otherwise, we import plain text. In order to support upload, we've imported two new modules: `uploadFeedback` and `objectStorage`. Let's see how `uploadFeedback` can be implemented.
@@ -235,8 +407,6 @@ We will implement file uploads into Object Storage(link to the service here). Ne
 1. Create new file `src/lib/upload-feedback.js` with the following content:
 
 	```javascript
-	// src/lib/upload-feedback.js
-
 	var database = require('./database');
 	var objectStorage = require('./object-storage');
 	var uuid = require('node-uuid');
@@ -264,21 +434,13 @@ We will implement file uploads into Object Storage(link to the service here). Ne
 
 	module.exports = uploadFeedback;
 	```
-	The module exports only one function - `uploadFeedback()`. Note that there're some similarities with `src/lib/import-feedback.js`. Primary function uploads a file using `objectStorage` and then inserts event. `insertEvent.bind(null, feedbackId)` is roughly an equivalent of this:
-
-	```javascript
-	function(audioPath) {
-	  return insertEvent(audioPath, feedbackId);
-	}
-	```
+	The module exports only one function - `uploadFeedback()`. Note that there're some similarities with `src/lib/import-feedback.js`. Primary function uploads a file using `objectStorage` and then inserts event.
 
 	Finally, the last part of uploading logic, is `objectStorage` module. Let's implement it.
 
 1. Create a new file `src/lib/object-storage.js` with the following content:
 
 	```javascript
-	// src/dashboard/lib/object-storage.js
-
 	var when = require('when');
 	var nodefn = require('when/node');
 	var streamifier = require('streamifier');
@@ -304,16 +466,23 @@ We will implement file uploads into Object Storage(link to the service here). Ne
 	  storageClient.CONTAINER_META_PREFIX = '';
 	}
 
+	function prepareFileStream(buffer) {
+	  return streamifier.createReadStream(buffer);
+	}
+
+	function prepareStorageStream(path) {
+	  return storageClient.upload({
+	    container: 'audio',
+	    remote: path
+	  });
+	}
+
 	function upload(path, buffer) {
 	  return when.promise(function(resolve, reject) {
-	    var fileStream = streamifier.createReadStream(buffer);
+	    var storageStream = prepareStorageStream(path);
+	    var fileStream = prepareFileStream(buffer);
 
-	    var writeStream = storageClient.upload({
-	      container: 'audio',
-	      remote: path
-	    });
-
-	    fileStream.pipe(writeStream);
+	    fileStream.pipe(storageStream);
 
 	    writeStream.on('success', function(data) {
 	      resolve(storageClient._serviceUrl + '/' + data.container + '/' + data.name);
@@ -325,36 +494,40 @@ We will implement file uploads into Object Storage(link to the service here). Ne
 	  });
 	}
 
-	function init() {
-	  setClient();
-
+	// Doesn't even if container exists
+	function createContainer() {
 	  return nodefn.call(storageClient.createContainer.bind(storageClient), {
 	    name: 'audio',
 	    metadata: { 'X-Container-Read': '.r:*' }
 	  });
 	}
 
+	function init() {
+	  setClient();
+	  return createContainer();
+	}
+
 	module.exports = {
 	  init: init,
 	  upload: upload
 	}
-
 	```
-	Just like database module at `src/lib/database.js`, we've implemented an `init()` function. The reasoning behind this is that files in Object Storage need to be stored inside of a container what is basically the same as the folfer in a file system (link to the docs here). The container needs to be created before we will be able to upload any files.
+	Just like database module at `src/lib/database.js`, we've implemented an `init()` function. The reasoning behind this is that files in Object Storage need to be stored inside of a container. Container is basically the same as a directory in a file system: [http://docs.openstack.org/developer/swift/api/object_api_v1_overview.html](http://docs.openstack.org/developer/swift/api/object_api_v1_overview.html). The container needs to be created before we will be able to upload any files.
 
-	In order to simplify processing of the files later, we make our `audio` container public. That way, all our services will be able to download files without any special libraries or credentials.
+	In order to simplify processing of the files later, we make our `audio` container public (by specifying `X-Container-Read`). That way, all our services will be able to download files without any special libraries or credentials.
 
-	The hardest part is the `upload()`. First, it setups two Node.js Streams (link to the docs). Streams are abstractions to transfer data in chunks. Second, it directs the data from `fileStream` to `writeStream`. Third, it uses `when.js` library to convert event-based API into promise-based. As a result, `upload()` returns Promise, which, when resolved, provides a path to uploaded file.
+	The hardest part is the `upload()`. First, it setups two Node.js Streams (link to the docs). Streams are abstractions to transfer data in chunks. Second, it directs the data from `fileStream` to `writeStream`. Third, it uses When.js library to convert event-based API into promise-based. As a result, `upload()` returns Promise, which, when resolved, provides a path to uploaded file.
 
 1. Let's refresh a browser window and check if all works correctly. You can try to upload one of the following files using the form:
-  * path to file
-  * path to file
-  * path to file
+  * TBD
+  * TBD
+  * TBD
 
   After import, the record should display *waiting for text extraction* state:
-  ```
-  Image with outcome here
-  ```
+
+  ![Waiting for text extraction]
+  (./uploading-files_extraction.png)
+
 
 Now you should be ready for the final step: speech to text conversion and subsequent analysis.
 
@@ -413,21 +586,9 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 	var nodefn = require('when/node');
 	var Cloudant = require('cloudant');
 
-	function main(params) {
-	  try {
-	    return extractText(params);
-	  } catch (error) {
-	    handleError(params, error);
-	  }
-	}
-
-	function extractText(params) {
-	  if ((params.type !== 'event') || (params.name !== 'AudioUploaded')) {
-	    return;
-	  }
-
+	function processEvent(params) {
 	  recognizeSpeech(params)
-	    .then(storeText.bind(null, params))
+	    .then(insertEvent.bind(null, params))
 	    .then(reportSuccess)
 	    .catch(handleError.bind(null, params))
 
@@ -449,8 +610,7 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 	  });
 	}
 
-	function storeText(params, response) {
-	  // TODO AS: Somehow, response is an array
+	function insertEvent(params, response) {
 	  var text = response[0].results[0].alternatives[0].transcript;
 	  var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
@@ -466,18 +626,19 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 	  });
 	}
 
-	function reportSuccess() {
-	  whisk.done();
+	function ignoreEvent(params) {
+	  var notAnEvent = params.type !== 'event';
+	  var notAudioUploaded = params.name !== 'AudioUploaded';
+
+	  return notAnEvent || notAudioUploaded;
 	}
 
-	function handleError(params, error) {
-	  console.log(params);
-	  console.log(error);
-	  console.log(error.stack);
-	  whisk.done({ error: error });
-	}
+	// Can be copied from previous actions
+	function main() { /*...*/ }
+	function reportSuccess() { /*...*/ }
+	function handleError() { /*...*/ }
 	```
-	Let's walk through key points. Again, we use `when.js` to turn callback-based API into promise-based in `recognizeSpeech()`. Then, we insert `TextAdded` event into Cloudant. Other parts are more or less simillar to other OpenWhisk actions.
+	Let's walk through key points. Again, we use When.js to turn callback-based API into promise-based in `recognizeSpeech()`. Then, we insert `TextAdded` event into Cloudant. Other parts are more or less simillar to other OpenWhisk actions.
 
 1. Let's use `deploy.sh` script and check if `extract-text.js` works:
 
@@ -485,16 +646,15 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 	./deploy.sh
 	```
 
-1. Refresh browser window and try to import new audio file. Some samples here:
-	* Sample file
-	* Sample file
-	* Sample file
+1. Refresh browser window and try to import new audio file. TODO: Only FLAC files will work now. Some samples here:
+	* TBD
+	* TBD
+	* TBD
 
 1. Extracting text usually takes some time, but if you refresh the page in 10 seconds, you should see something like this:
 
-	```
-	Image with audio extract details
-	```
+	![Extracting Text]
+	(./extracting-text__results.png)
 
 ###Troubleshooting
 TBD
