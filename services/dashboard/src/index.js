@@ -29,10 +29,9 @@ app.get('/', function(req, res) {
 
 var upload = multer();
 var importFeedback = require('./lib/import-feedback');
-var uploadFeedback = require('./lib/upload-feedback');
 
-app.post('/feedback', upload.single('audio'), function(req, res) {
-  (req.file ? uploadFeedback(req.file) : importFeedback(req.body.content))
+app.post('/feedback', upload.array(), function(req, res) {
+  importFeedback(req.body.content)
     .then(function() { res.redirect('/'); })
     .catch(function(err) { handleServerError(err, res) });
 });
@@ -46,10 +45,8 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) { handleServerError(err, res) });
 
 var database = require('./lib/database');
-var objectStorage = require('./lib/object-storage');
 
 database.init()
-  .then(objectStorage.init)
   .then(function() {
     var port = process.env.PORT || 3000;
     app.listen(port, function() { console.log('Listening on port', port); });
