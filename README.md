@@ -187,7 +187,7 @@ Starting app has three primary services: `dashboard`, `change-listener` and `ana
 	We do not store feedback records, but instead we store a sequence of events. That sequence can be replayed to construct feedback records.
 
 	Every time we open the `dashboard`, it groups events by `aggregate_id` and replays them from the oldest to the most recent one. For example, if we add another event into the mix:
-	
+
 	```javascript
 	// This event comes significantly later than
 	// previous 'TextAdded'
@@ -217,7 +217,7 @@ Starting app has three primary services: `dashboard`, `change-listener` and `ana
 	}
 	```
 	Let's point out again, that feedback records themselves are never stored (they can be cached, by each new event should invalidate that cache). They're constucted on every request.
-	
+
 	Provided code is a naive implementation of Event Sourcing: [http://martinfowler.com/eaaDev/EventSourcing.html](http://martinfowler.com/eaaDev/EventSourcing.html).
 
 * `change-listener` setups OpenWhisk trigger and feed [https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_triggers_rules.html](https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_triggers_rules.html). Basically, it calls attached OpenWhisk actions every time Cloudant database is updated. In our case - every time we insert an event into database.
@@ -376,7 +376,7 @@ Actual audio processing will be covered a bit later.
 1. Install additional NPM packages:
 
 	```bash
-	npm install --save streamifier pkgcloud multer
+	npm install --save streamifier pkgcloud
 	```
 
 1. Let's start with the upload form. Modify `src/views/home.pug` as follows:
