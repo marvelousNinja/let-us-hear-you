@@ -23,6 +23,7 @@ function setClient() {
   storageClient.CONTAINER_META_PREFIX = '';
 }
 
+// TODO AS: Better names for streams
 function upload(path, buffer) {
   return when.promise(function(resolve, reject) {
     var fileStream = streamifier.createReadStream(buffer);
@@ -47,6 +48,7 @@ function upload(path, buffer) {
 function init() {
   setClient();
 
+  // TODO AS: Extract this
   return nodefn.call(storageClient.createContainer.bind(storageClient), {
     name: 'audio',
     metadata: { 'X-Container-Read': '.r:*' }

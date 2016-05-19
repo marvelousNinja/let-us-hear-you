@@ -6,6 +6,7 @@ function uploadFeedback(file) {
   var feedbackId = uuid.v4();
   var filePath = feedbackId + '/' + file.originalname;
 
+  // TODO AS: I can actually avoid bind here...
   return objectStorage.upload(filePath, file.buffer)
     .then(insertEvent.bind(null, feedbackId));
 }
