@@ -24,11 +24,20 @@ Here's a list of software and external service accounts you would need to comple
   * OpenWhisk (closed beta) access: [https://bluemix.net/openwhisk](https://bluemix.net/openwhisk)
   * OpenWhisk CLI: [https://bluemix.net/openwhisk/cli](https://bluemix.net/openwhisk/cli)
   * Twilio account: [https://www.twilio.com/try-twilio](https://www.twilio.com/try-twilio)
-  * Linux/Mac OS
   * Node.js 4.4.x
   * Git
 
-## Getting started
+## OS Specific Notes
+OpenWhisk CLI setup on Windows is a bit different from official instructions. The first step should not include `sudo` command:
+
+```
+pip install --upgrade https://new-console.ng.bluemix.net/openwhisk/cli/download
+```
+OpenWhisk CLI is compatible with Python 2 only. Windows install package can be found here: [https://www.python.org/downloads/windows/](https://www.python.org/downloads/windows/).
+
+The labwork includes Shell scripts for Linux and their Batch counterparts for Windows.
+
+## Getting Started
 Before we proceed with actual development, we need to get starting version of the app and get familiar with the code.
 Also note that since OpenWhisk is available at US South region only, we will need to deploy our app in that region.
 
@@ -112,20 +121,39 @@ Also note that since OpenWhisk is available at US South region only, we will nee
 1. Create required Bluemix services with the following command:
 
 	```bash
+	# Linux
 	./create-external-services.sh
+	```
+
+	```batch
+	:: Windows
+	create-external-services.bat
 	```
 
 1. Create configuration files. `*.sample` files contain fake credentials:
 
 	```bash
+	# Linux
 	cp services/dashboard/.env.sample services/dashboard/.env
 	cp services/config.env.sample config.env
+	```
+
+	```batch
+	:: Windows
+	copy services/dashboard/.env.sample services/dashboard/.env
+	copy services/config.env.sample config.env
 	```
 
 1. Using credentials of created services, fill out created config files. You can get credentials for Bluemix services with:
 
 	```bash
+	# Linux
 	./print-external-credentials.sh
+	```
+
+	```batch
+	:: Windows
+	print-external-credentials.bat
 	```
 
 	Twilio credentials need to be obtained from Twilio dashboard: [https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1](https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1)
@@ -142,17 +170,35 @@ Also note that since OpenWhisk is available at US South region only, we will nee
 	cd services/dashboard
 	npm install
 	npm run watch
+	```
 
-	# and in different window
+	And in another terminal window:
+
+	```bash
+	# Linux
 	./services/change-listener/deploy.sh
 	./services/analyzer/deploy.sh
 	```
+
+	```batch
+	:: Windows
+	./services/change-listener/deploy.bat
+	./services/analyzer/deploy.bat
+	```
+
+
 	By default `dashboard` starts at 3000 port. It will restart itself every time you modify `*.js` files.
 
 1. `dashboard` itself can be deployed too.
 
 	```bash
+	# Linux
 	./services/dashboard/deploy.sh
+	```
+
+	```batch
+	:: Windows
+	./services/dashboard/deploy.bat
 	```
 
 	Go ahead and try to import some feedback text via `dashboard` (either on `http://localhost:3000` or Bluemix URL printed by deploy script). If the process was successful, you should see emotion score numbers after a couple of refreshes:
@@ -241,7 +287,7 @@ The purpose of this step is to implement `sms-notifier` service. Here's a high-l
 Let us implement `sms-notifier` service as an OpenWhisk action. That way we can reuse our experience with `analyzer` service.
 
 1. Create a new service folder `sms-notifier`
-1. Add a `deploy.sh` script with the following contents:
+1. Linux users should create `deploy.sh` script with the following contents:
 
 	```bash
 	#!/bin/bash
@@ -259,9 +305,27 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 
 	wsk rule create --enable sendSmsOnChange letUsHearYouDatabaseChanged sendSms
 	```
-	We use Cloudant and Twilio APIs here, so default parameters contain credentials to these services. `$MANAGER_PHONE_NUMBER` is a number to which text messages are going to be sent. If you are using trial Twilio account, you need to verify phone number beforehand.
 
-1. Create a `remove.sh` script with the following code:
+	Windows counterpart `deploy.bat` can look like this:
+
+	```batch
+	for /f "delims=" %%x in (./../config.env) do (set "%%x")
+
+	wsk action update sendSms send-sms.js^
+	  -p cloudant_url https://%CLOUDANT_USERNAME%:%CLOUDANT_PASSWORD%@%CLOUDANT_HOST%^
+	  -p cloudant_db %CLOUDANT_DB%^
+	  -p twilio_url %TWILIO_URL%^
+	  -p twilio_sid %TWILIO_SID%^
+	  -p twilio_access_key %TWILIO_ACCESS_KEY%^
+	  -p twilio_phone_number %TWILIO_PHONE_NUMBER%^
+	  -p manager_phone_number %MANAGER_PHONE_NUMBER%
+
+	wsk rule create --enable sendSmsOnChange letUsHearYouDatabaseChanged sendSms
+	```
+
+	We use Cloudant and Twilio APIs here, so default parameters contain credentials to these services. `MANAGER_PHONE_NUMBER` is a number to which text messages are going to be sent. If you are using trial Twilio account, you need to verify phone number beforehand.
+
+1. In order to remove previously deployed service, we would need another script. Linux `remove.sh` can look like this:
 
 	```bash
 	#!/bin/bash
@@ -270,13 +334,20 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 	wsk action delete sendSms
 	```
 
-1. Set executable flag on both scripts:
+	And `remove.bat` for Windows is almost the same:
+
+	```batch
+	wsk rule delete --disable sendSmsOnChange
+	wsk action delete sendSms
+	```
+
+  Linux users should not forget to set executable flag on both scripts:
 
 	```bash
 	chmod +x deploy.sh remove.sh
 	```
 
-1. Let's implement OpenWhisk action itself. However, before doing this, it might be useful to experiment with Twilio Api Explorer: [https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1](https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1). After that, create `send-sms.js` file:
+1. Let's implement our first OpenWhisk action. Before we dive in it might be useful to consult with OpenWhisk system details here: [https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_reference.html#openwhisk_ref_javascript](https://new-console.ng.bluemix.net/docs/openwhisk/openwhisk_reference.html#openwhisk_ref_javascript). Information about exact Node.js version and available NPM packages can be found here: [https://github.com/openwhisk/openwhisk/blob/master/core/nodejsAction/Dockerfile](https://github.com/openwhisk/openwhisk/blob/master/core/nodejsAction/Dockerfile). Since we are going to use Twilio API, you can experiment with it here: [https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1](https://www.twilio.com/user/account/voice/dev-tools/api-explorer/message-create?expanded=1). After that, create `send-sms.js` file:
 
 	```bash
 	var request = require('request');
@@ -348,7 +419,13 @@ Let us implement `sms-notifier` service as an OpenWhisk action. That way we can 
 1. Deploy the action to OpenWhisk:
 
 	```bash
+	# Linux
 	./deploy.sh
+	```
+
+	```batch
+	:: Windows
+	deploy.bat
 	```
 
 1. Now, refresh the browser and input import some angry feedback. Here're some examples:
@@ -567,7 +644,7 @@ In the previous step we've added file upload capabilities to the `dashboard` ser
 Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an OpenWhisk action.
 
 1. Start by creating a new service folder `text-extractor`.
-1. Create `deploy.sh` script:
+1. On Linux, create `deploy.sh` script:
 
 	```bash
 	#!/bin/bash
@@ -583,9 +660,25 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 
 	wsk rule create --enable extractTextOnChange letUsHearYouDatabaseChanged extractText
 	```
+
+	And `deploy.bat` for Windows:
+
+	```batch
+	for /f "delims=" %%x in (./../config.env) do (set "%%x")
+
+	wsk action update extractText extract-text.js^
+	  -p cloudant_url https://%CLOUDANT_USERNAME%:%CLOUDANT_PASSWORD%@%CLOUDANT_HOST%^
+	  -p cloudant_db %CLOUDANT_DB%^
+	  -p speech_to_text_url %SPEECH_TO_TEXT_URL%^
+	  -p speech_to_text_username %SPEECH_TO_TEXT_USERNAME%^
+	  -p speech_to_text_password %SPEECH_TO_TEXT_PASSWORD%
+
+	wsk rule create --enable extractTextOnChange letUsHearYouDatabaseChanged extractText
+	```
+
 	Since action needs to utilise Cloudant and Watson Speech-To-Text API, credentials are provided as default action parameters.
 
-1. Corresponding `remove.sh` script can look like this:
+1. Corresponding `remove.sh` for Linux can look like this:
 
 	```bash
 	#!/bin/bash
@@ -594,7 +687,14 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 	wsk action delete extractText
 	```
 
-1. Set executable flag on both scripts:
+	Windows users can create `remove.bat` with almost the same content:
+
+	```batch
+	wsk rule delete --disable extractTextOnChange
+	wsk action delete extractText
+	```
+
+1. Linux users should set executable flag on both scripts:
 
 	```bash
 	chmod +x deploy.sh remove.sh
@@ -664,8 +764,14 @@ Just like `sms-notifier` and `analyzer`, we can implement `text-extractor` as an
 
 1. Let's use `deploy.sh` script and check if `extract-text.js` works:
 
-	```
+	```bash
+	# Linux
 	./deploy.sh
+	```
+
+	```batch
+	:: Windows
+	deploy.bat
 	```
 
 1. Refresh browser window and try to import new audio file. TODO: Only FLAC files will work now. Some samples here:
