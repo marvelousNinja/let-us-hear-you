@@ -1,6 +1,6 @@
 for /f "delims=" %%x in (./../config.env) do (set "%%x")
 
-wsk action update analyze analyze.js^
+wsk action create analyze analyze.js^
   -p cloudant_url https://%CLOUDANT_USERNAME%:%CLOUDANT_PASSWORD%@%CLOUDANT_HOST%^
   -p cloudant_db %CLOUDANT_DB%^
   -p tone_analyzer_url %TONE_ANALYZER_URL%^

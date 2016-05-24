@@ -2,7 +2,7 @@
 
 source ./../config.env
 
-wsk action update sendSms send-sms.js \
+wsk action create sendSms send-sms.js \
   -p cloudant_url https://$CLOUDANT_USERNAME:$CLOUDANT_PASSWORD@$CLOUDANT_HOST \
   -p cloudant_db $CLOUDANT_DB \
   -p twilio_url $TWILIO_URL \
