@@ -47,9 +47,9 @@ function insertEvent(params) {
 
 function ignoreEvent(params) {
   var notAnEvent = params.type !== 'event';
-  var notEmotionAnalysed = params.name !== 'EmotionsAnalysed';
+  var notEmotionsAnalyzed = params.name !== 'EmotionsAnalyzed';
 
-  return notAnEvent || notEmotionAnalysed;
+  return notAnEvent || notEmotionsAnalyzed;
 }
 
 function databaseInsert(params, record) {

@@ -35,7 +35,7 @@ function insertEvent(params, response) {
 
   return databaseInsert(params, {
     type: 'event',
-    name: 'EmotionsAnalysed',
+    name: 'EmotionsAnalyzed',
     aggregate_type: 'feedback',
     aggregate_id: params.aggregate_id,
     timestamp: +new Date(),

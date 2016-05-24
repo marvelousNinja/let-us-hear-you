@@ -1,7 +1,7 @@
 var EVENT_NAME_TO_STATUS = {
   'TextAdded': 'waiting for text analysis',
   'AudioUploaded': 'waiting for text extraction',
-  'EmotionsAnalysed': 'analysed',
+  'EmotionsAnalyzed': 'analyzed',
   'SmsNotificationSent': 'manager has been notified',
   'ErrorOccurred': 'error occurred'
 };
