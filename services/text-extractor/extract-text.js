@@ -1,10 +1,11 @@
-var watson = require('watson-developer-cloud');
 var request = require('request');
+var when = require('when');
 var nodefn = require('when/node');
 var Cloudant = require('cloudant');
 
 function processEvent(params) {
   recognizeSpeech(params)
+    .then(failUnlessOK)
     .then(insertEvent.bind(null, params))
     .then(reportSuccess)
     .catch(handleError.bind(null, params))
@@ -13,22 +14,24 @@ function processEvent(params) {
 }
 
 function recognizeSpeech(params) {
-  var speechToText = watson.speech_to_text({
-    username: params.speech_to_text_username,
-    password: params.speech_to_text_password,
-    url: params.speech_to_text_url,
-    version: 'v1'
-  });
+  return when.promise(function(resolve, reject) {
+    var audioStream = request(params.attributes.path);
+    var recognitionStream = request({
+      url: params.speech_to_text_url + '/v1/recognize',
+      method: 'POST',
+      json: true,
+      auth: {
+        username: params.speech_to_text_username,
+        password: params.speech_to_text_password
+      }
+    }, function(error, response, body) { error ? reject(error) : resolve([response, body]) });
 
-  return nodefn.call(speechToText.recognize.bind(speechToText), {
-    audio: request(params.attributes.path),
-    // TODO AS: Support more formats or document that limitation...
-    content_type: 'audio/flac'
+    audioStream.pipe(recognitionStream);
   });
 }
 
 function insertEvent(params, response) {
-  var text = response[0].results[0].alternatives[0].transcript;
+  var text = response[1].results[0].alternatives[0].transcript;
   var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
   return nodefn.call(database.insert.bind(database), {
@@ -48,6 +51,14 @@ function ignoreEvent(params) {
   var notAudioUploaded = params.name !== 'AudioUploaded';
 
   return notAnEvent || notAudioUploaded;
+}
+
+function failUnlessOK(response) {
+  if (response[0].statusCode !== 200) {
+    throw new Error(JSON.stringify(response[1]));
+  }
+
+  return response;
 }
 
 function main(params) {

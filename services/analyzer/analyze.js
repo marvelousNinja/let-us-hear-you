@@ -4,6 +4,7 @@ var Cloudant = require('cloudant');
 
 function processEvent(params) {
   analyzeText(params)
+    .then(failUnlessOK)
     .then(insertEvent.bind(null, params))
     .then(reportSuccess)
     .catch(handleError.bind(null, params))
@@ -26,7 +27,7 @@ function analyzeText(params) {
 }
 
 function insertEvent(params, response) {
-  var tones = response[0].body.document_tone.tone_categories[0].tones;
+  var tones = response[1].document_tone.tone_categories[0].tones;
   var emotions = tones.reduce(function(result, tone_record) {
     result[tone_record.tone_id] = tone_record;
     return result;
@@ -50,6 +51,14 @@ function ignoreEvent(params) {
   var notTextAdded = params.name !== 'TextAdded';
 
   return notAnEvent || notTextAdded;
+}
+
+function failUnlessOK(response) {
+  if (response[0].statusCode !== 200) {
+    throw new Error(JSON.stringify(response[1]));
+  }
+
+  return response;
 }
 
 function main(params) {
