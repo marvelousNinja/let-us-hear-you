@@ -12,9 +12,10 @@ app.set('view options', { layout: false });
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(logger('dev'));
-app.use(autoprefixer({ browsers: 'last 2 versions', cascade: false }));
+app.use(autoprefixer({ browsers: 'last 3 versions', cascade: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+var handleServerError = require('./lib/error-handlers.js').handleServerError;
 var feedbackRepository = require('./lib/feedback-repository');
 var displayHelper = require('./lib/display-helper');
 
@@ -23,7 +24,7 @@ app.get('/', function(req, res) {
     .then(function(resources) {
       res.render('home', { resources: displayHelper.recentFeedback(resources) });
     })
-    .catch(function(err) { handleError(err, res) });
+    .catch(function(err) { handleServerError(err, res) });
 });
 
 var upload = multer();
@@ -33,7 +34,7 @@ var uploadFeedback = require('./lib/upload-feedback');
 app.post('/feedback', upload.single('audio'), function(req, res) {
   (req.file ? uploadFeedback(req.file) : importFeedback(req.body.content))
     .then(function() { res.redirect('/'); })
-    .catch(function(err) { handleError(err, res) });
+    .catch(function(err) { handleServerError(err, res) });
 });
 
 app.use(function(req, res, next) {
@@ -42,15 +43,7 @@ app.use(function(req, res, next) {
   next(err);
 });
 
-app.use(function(err, req, res, next) { handleError(err, res) });
-
-function handleError(err, res) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: err
-  });
-}
+app.use(function(err, req, res, next) { handleServerError(err, res) });
 
 var database = require('./lib/database');
 var objectStorage = require('./lib/object-storage');

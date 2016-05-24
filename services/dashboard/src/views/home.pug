@@ -4,26 +4,25 @@ html
     link(rel='stylesheet', href='home.css')
   body
     .header
-      .thin Let Us
-      .bold &nbsp;Hear You
+      .header__thin Let Us
+      .header__bold Hear You
 
     - resources.forEach(function(feedback) {
       .feedback
         .feedback__heading= feedback.attributes.text ? feedback.attributes.text.substr(0, 35) + '...' : 'Content not available...'
+        if feedback.attributes.emotions
+          .feedback__emotions
+            each emotion, name in feedback.attributes.emotions
+              .feedback__emotion.accent #{emotion.tone_name}&nbsp;#{Math.floor(emotion.score * 100) + '%'}
         .feedback__details
           .accent #{feedback.attributes.status}&nbsp;
           .misc= 'since ' + new Date(feedback.last_event.timestamp)
-        .feedback__emotions
-          each emotion, name in feedback.attributes.emotions || {}
-            .accent(style='color: #FF349C') #{emotion.tone_name}&nbsp;
-            .accent(style='color: #FF349C; margin-right: 15px;') #{Math.floor(emotion.score * 100) + '%'}&nbsp;
         .feedback__content= feedback.attributes.text
     - })
 
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
       .feedback-form__title Import Feedback
-      textarea.feedback-form__content(name='content', rows='10', placeholder='Please, provide feedback text content here')
-      label.feedback-form__audio
+      label.feedback-form__label Upload a Recording
         input.feedback-form__file(type='file', name='audio')
-        | Or Provide Audio Record
-      button.feedback-form__submit.button(type='submit') Import Feedback
+      textarea.feedback-form__content(name='content', rows='5', placeholder='Or provide feedback text here')
+      button.feedback-form__submit.button(type='submit') Save

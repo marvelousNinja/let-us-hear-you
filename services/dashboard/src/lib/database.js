@@ -1,8 +1,9 @@
 var nodefn = require('when/node');
+var errorHandlers = require('./error-handlers');
 var Cloudant = require('cloudant');
 
 var connection = Cloudant(process.env.CLOUDANT_URL);
-var databaseName = 'let_us_hear_you';
+var databaseName = process.env.CLOUDANT_DB;
 
 function createDatabase() {
   return nodefn.call(connection.db.create.bind(connection.db), databaseName);
@@ -16,7 +17,7 @@ function setDatabase() {
 
 function setupViews() {
   return nodefn.call(database.get.bind(database), '_design/events')
-    .catch(function() {}) // TODO AS: Fix later
+    .catch(errorHandlers.ignoreNotFound)
     .then(function(response) {
       var designDoc = {
         views: {
@@ -40,7 +41,7 @@ function setupViews() {
 
 function init() {
   return createDatabase()
-    .catch(function() {}) // TODO AS: Fix later
+    .catch(errorHandlers.ignoreAlreadyExists)
     .then(setDatabase)
     .then(setupViews)
 }

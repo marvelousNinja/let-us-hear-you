@@ -9,13 +9,15 @@ html {
   font-family: 'Lato', sans-serif;
   line-height: 1.4rem;
   font-size: 15px;
+
+  background-color: #E9E9E9;
 }
 
 body {
   max-width: 600px;
+  min-width: 600px;
   width: 100%;
-  margin: 0 auto;
-  margin-top: 110px;
+  margin: 130px auto;
 }
 
 .accent {
@@ -28,18 +30,12 @@ body {
   text-transform: uppercase;
   font-weight: 300;
   font-size: 0.8rem;
-}
-
-.thin {
-  font-weight: 300;
-}
-
-.bold {
-  font-weight: 600;
+  color: #C3C3C3;
 }
 
 .header {
   font-size: 2.5rem;
+
   display: flex;
   flex-direction: row;
 
@@ -47,35 +43,29 @@ body {
   color: #FFFFFF;
 
   padding: 3rem 3rem 3rem 1.5rem;
-  position: fixed;
+
   width: 100%;
+  min-width: 600px;
+
+  position: fixed;
   left: 0;
   top: 0;
+}
+
+.header__thin {
+  font-weight: 300;
+  margin-right: 1rem;
+}
+
+.header__bold {
+  font-weight: 600;
 }
 
 .feedback {
   margin-bottom: 45px;
   min-height: 150px;
-}
-
-.feedback:before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: 0;
-  height: 85px;
-  width: 100%;
-  background-color: #9855D4;
-}
-
-.feedback__emotions {
-  padding: 1.5rem;
-  padding-bottom: 0rem;
-  padding-top: 2.5rem;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  font-style: italic;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .feedback__heading {
@@ -83,15 +73,30 @@ body {
   font-size: 1.6rem;
   padding: 1rem 1.5rem;
   color: #FFFFFF;
+  background-color: #00796B
+}
+
+.feedback__emotions {
+  padding: 1.5rem;
+  padding-bottom: 0.5rem;
+  padding-top: 0.5rem;
+
+  display: flex;
+  flex-direction: row;
+
+  color: #FFFFFF;
+  background-color: #009688;
+}
+
+.feedback__emotion {
+  margin-right: 1rem;
 }
 
 .feedback__details {
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  padding: 0 1.5rem;
-  padding-bottom: 0.5rem;
-  color: #FFFFFF;
+  padding: 0.5rem 1.5rem
 }
 
 .feedback__content {
@@ -99,72 +104,83 @@ body {
 }
 
 .feedback-form {
-  padding: 1.5rem;
-}
-
-.feedback-form__content {
-  padding: 10px;
-  border: 2px solid #9855D4;
-  font-size: 15px;
-  width: 100%;
-  font-family: 'Lato', sans-serif;
-}
-
-.feedback-form__content::-webkit-input-placeholder {
-  font-weight: 300;
-}
-
-.feedback-form__content:focus {
-  outline: none;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 .feedback-form__title {
   font-weight: 600;
   font-size: 1.6rem;
-  color: #9855D4;
-  padding: 1rem 0;
-}
-
-.feedback-form__audio {
-  border: 2px solid #9855D4;
-  color: #9855D4;
-  padding: 5px;
-  margin-top: 15px;
-  margin-right: 15px;
-  display: inline-block;
-}
-
-.feedback-form__audio:hover {
   color: #FFFFFF;
-  background-color: #9855D4;
+  background-color: #00796B;
+  padding: 1rem 1.5rem;
 }
 
-.feedback-form__file:hover {
-  color: #FFFFFF;
-  background-color: #9855D4;
+.feedback-form__content {
+  border: 1px solid #C3C3C3;
+  border-radius: 2px;
+
+  padding: 0.5rem;
+  margin: 0.5rem 1rem 1rem 1rem;
+
+  display: flex;
+
+  font-family: 'Lato', sans-serif;
+  font-size: 1rem;
+
+  outline: none;
+  resize: none;
+
+  box-sizing: border-box;
+}
+
+.feedback-form__content::-webkit-input-placeholder {
+  font-weight: 200;
 }
 
 .feedback-form__submit {
-  background-color: #FFFFFF;
-  border: 2px solid #9855D4;
-  padding: 5px;
+  text-transform: uppercase;
   font-size: 1rem;
   font-family: 'Lato', sans-serif;
-  color: #9855D4;
+  font-weight: 600;
   line-height: 1.4rem;
-  box-sizing: content-box;
+
+  padding: 1rem;
+
+  background-color: #FFFFFF;
+  color: #00796B;
+
+  border: 0;
+  outline: none;
 }
 
-.feedback-form__submit:active {
-  color: #FFFFFF;
-  background-color: #9855D4;
+.feedback-form__label {
+  font-size: 1rem;
+  font-weight: 300;
+
+  color: #00796B;
+
+  padding: 0.5rem 1.5rem;
+  padding-top: 1rem;
+
+  display: block;
+}
+
+.feedback-form__file {
+  font-size: 1rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  line-height: 0.5rem;
+
+  padding: 0rem 1.5rem;
+
+  display: inline-block;
+
+  outline: none;
 }
 
 .feedback-form__submit:hover {
-  color: #FFFFFF;
-  background-color: #9855D4;
-}
-
-.feedback-form__submit:focus {
-  outline: none;
+  background-color: #80CBC4;
 }
