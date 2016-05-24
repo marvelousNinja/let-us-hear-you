@@ -14,6 +14,8 @@ html
           .feedback__emotions
             each emotion, name in feedback.attributes.emotions
               .feedback__emotion.accent #{emotion.tone_name}&nbsp;#{Math.floor(emotion.score * 100) + '%'}
+        if feedback.attributes.error
+          .feedback__error= feedback.attributes.error.substr(0, 70) + '...'
         .feedback__details
           .accent #{feedback.attributes.status}&nbsp;
           .misc= 'since ' + new Date(feedback.last_event.timestamp)

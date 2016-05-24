@@ -24,7 +24,9 @@ function recognizeSpeech(params) {
         username: params.speech_to_text_username,
         password: params.speech_to_text_password
       }
-    }, function(error, response, body) { error ? reject(error) : resolve([response, body]) });
+    }, function(error, response, body) {
+      error ? reject(error) : resolve([response, body])
+    });
 
     audioStream.pipe(recognitionStream);
   });
@@ -32,9 +34,8 @@ function recognizeSpeech(params) {
 
 function insertEvent(params, response) {
   var text = response[1].results[0].alternatives[0].transcript;
-  var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
 
-  return nodefn.call(database.insert.bind(database), {
+  return databaseInsert(params, {
     type: 'event',
     name: 'TextAdded',
     aggregate_type: 'feedback',
@@ -61,11 +62,17 @@ function failUnlessOK(response) {
   return response;
 }
 
+function databaseInsert(params, record) {
+  var database = Cloudant(params.cloudant_url).use(params.cloudant_db);
+  return nodefn.call(database.insert.bind(database), record);
+}
+
 function main(params) {
   try {
     return ignoreEvent(params) ? null : processEvent(params);
   } catch (error) {
     handleError(params, error);
+    return whisk.async();
   }
 }
 
@@ -77,5 +84,19 @@ function handleError(params, error) {
   console.log(params);
   console.log(error);
   console.log(error.stack);
-  whisk.done({ error: error });
+
+  return databaseInsert(params, {
+    type: 'event',
+    name: 'ErrorOccurred',
+    aggregate_type: 'feedback',
+    aggregate_id: params.aggregate_id,
+    timestamp: +new Date(),
+    attributes: {
+      error: error.message
+    }
+  })
+  .catch(function() {})
+  .then(function() {
+    whisk.done({ error: error });
+  });
 }

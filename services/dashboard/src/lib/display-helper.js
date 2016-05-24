@@ -3,7 +3,7 @@ var EVENT_NAME_TO_STATUS = {
   'AudioUploaded': 'waiting for text extraction',
   'EmotionsAnalysed': 'analysed',
   'SmsNotificationSent': 'manager has been notified',
-  'Errored': 'error occured'
+  'ErrorOccurred': 'error occurred'
 };
 
 function recentFeedback(resources) {
