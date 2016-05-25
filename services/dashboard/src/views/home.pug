@@ -20,6 +20,8 @@ html
           .accent #{feedback.attributes.status}&nbsp;
           .misc= 'since ' + new Date(feedback.last_event.timestamp)
         .feedback__content= feedback.attributes.text
+        if feedback.attributes.path
+          a.feedback__source(href=feedback.attributes.path)= feedback.attributes.path
     - })
 
     form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')

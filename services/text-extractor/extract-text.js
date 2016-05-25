@@ -17,7 +17,7 @@ function recognizeSpeech(params) {
   return when.promise(function(resolve, reject) {
     var audioStream = request(params.attributes.path);
     var recognitionStream = request({
-      url: params.speech_to_text_url + '/v1/recognize',
+      url: params.speech_to_text_url + '/v1/recognize?continuous=true',
       method: 'POST',
       json: true,
       auth: {
@@ -33,7 +33,9 @@ function recognizeSpeech(params) {
 }
 
 function insertEvent(params, response) {
-  var text = response[1].results[0].alternatives[0].transcript;
+  var text = response[1].results.map(function(recognitionGroup) {
+    return recognitionGroup.alternatives[0].transcript;
+  }).join(' ');
 
   return databaseInsert(params, {
     type: 'event',

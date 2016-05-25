@@ -109,6 +109,12 @@ body {
   padding: 0.5rem 1.5rem 1.5rem 1.5rem;
 }
 
+.feedback__source {
+  padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+  display: block;
+  word-wrap: break-word;
+}
+
 .feedback-form {
   background-color: #FFFFFF;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
