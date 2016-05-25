@@ -541,7 +541,8 @@ Actual audio processing will be covered a bit later.
     .then(function() {
       var port = process.env.PORT || 3000;
       app.listen(port, function() { console.log('Listening on port', port); });
-    });
+    })
+    .catch(function(error) { throw error });
   ```
 
   We check if there's a file in the form and upload it. Otherwise, we import plain text. In order to support upload, we've imported two new modules: `uploadFeedback` and `objectStorage`. Let's see how `uploadFeedback` can be implemented.
