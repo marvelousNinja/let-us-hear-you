@@ -10,10 +10,10 @@ function processEvent(params) {
     return;
   }
 
-  sendSms(params).
-    then(insertEvent.bind(null, params)).
-    then(reportSuccess).
-    catch(handleError.bind(null, params))
+  sendSms(params)
+    .then(insertEvent.bind(null, params))
+    .then(reportSuccess)
+    .catch(handleError.bind(null, params))
 
   return whisk.async();
 }
