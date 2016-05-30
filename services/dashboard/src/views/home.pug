@@ -24,9 +24,15 @@ html
           a.feedback__source(href=feedback.attributes.path)= feedback.attributes.path
     - })
 
-    form.feedback-form(action='/feedback', method='post', enctype='multipart/form-data')
+    form.feedback-form(
+      action='/feedback'
+      method='post'
+      enctype='multipart/form-data')
       .feedback-form__title Import Feedback
       label.feedback-form__label Upload a Recording
         input.feedback-form__file(type='file', name='audio')
-      textarea.feedback-form__content(name='content', rows='5', placeholder='Or provide feedback text here')
+      textarea.feedback-form__content(
+        name='content'
+        rows='5'
+        placeholder='Or provide feedback text here')
       button.feedback-form__submit.button(type='submit') Save
